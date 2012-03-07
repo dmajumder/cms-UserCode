@@ -1,9 +1,10 @@
-#define bprimeAnalyzer_00_00_00_cxx
+#define BPRIMEANALYZER_00_00_00_CXX
 #include "bprimeAnalyzer.h"
 #include "mathutils.h"
 
-#include "HEADERDIR/format.h"
-#include "HEADERDIR/HitFitInfoBranches.h"
+#include "HEADERDIR/format.h" 
+#include "HEADERDIR/TriggerBooking.h" 
+#include "BTagWeight.h" 
 
 #include <iostream>
 #include <cmath>
@@ -15,27 +16,91 @@
 
 using namespace std; 
 
-void generate_weights(int PUmode, Double_t Weight3D[50][50][50]) {
+const int beginRunNo[11] = {
+160431,   
+161217,   
+163270,   
+165088,   
+165970,   
+165970,   
+170826,   
+173236,   
+175832,   
+178420,   
+179959  
+} ;
 
-  TFile *f1 = new TFile("/afs/cern.ch/user/d/devdatta/Analysis/FourthGen/Weight3D.root"); 
+const int endRunno[11] = {
+161176,  
+163261,  
+163869,  
+165633,  
+166967,  
+166967,  
+173198,  
+173692,  
+178380,  
+179889,  
+180252 
+} ; 
+
+const int hltBitIndex[11] = {
+HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v1,  
+HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v2,  
+HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v3,  
+HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v4,  
+HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v5,  
+HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v6,  
+HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v7,  
+HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v8,  
+HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v8,  
+HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v9,  
+HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v10 
+} ; 
+
+const char* hltPaths[11] = {
+"HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v1",  
+"HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v2",  
+"HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v3",  
+"HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v4",  
+"HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v5",  
+"HLT_Ele17_CaloIdL_CaloIsoVL_Ele8_CaloIdL_CaloIsoVL_v6",  
+"HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v7",  
+"HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v8",  
+"HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v8",  
+"HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v9",  
+"HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v10" 
+} ; 
+
+void generateWeightsPU(int PUmode, double PUWeight3D[50][50][50]) {
+
+  TFile *f1 = new TFile("/afs/cern.ch/user/d/devdatta/Analysis/FourthGen/PUWeight3D.root"); 
   TH3D *WHist=(TH3D *)f1->Get("WHist");
 
   if(PUmode==1) {
     for(int ii=0;ii<50;ii++)
       for(int jj=0;jj<50;jj++)
         for(int kk=0;kk<50;kk++)
-          Weight3D[ii][jj][kk]=WHist->GetBinContent(ii+1,jj+1,kk+1);
+          PUWeight3D[ii][jj][kk]=WHist->GetBinContent(ii+1,jj+1,kk+1);
    }
+
+  return ; 
 
 }
 
-Double_t getPUWeights (int pv1, int pv2, int pv3, Double_t Weight3D[50][50][50]) {
+double getWeightPU (int pv1, int pv2, int pv3, double PUWeight3D[50][50][50]) {
 
   int npm1 = min(pv1,49);
   int np0  = min(pv2,49);
   int npp1 = min(pv3,49);
-  return (npm1>-1 && np0>-1 && npp1>-1) ? Weight3D[npm1][np0][npp1] : 0; 
+  return (npm1>-1 && np0>-1 && npp1>-1) ? PUWeight3D[npm1][np0][npp1] : 0; 
 
+}
+
+double getWeightBtag (int& bq,int& cq,int& lq,std::vector<double>& v_bpt,std::vector<double>& v_cpt,std::vector<double>& v_lpt,std::vector<double>& v_leta) { 
+  double weightBtag(0.) ;
+  weightBtag =  (bq+cq+lq)*v_bpt.size()+v_cpt[0]+v_lpt[1]+v_leta.size() ; 
+  return weightBtag ; 
 }
 
 Histograms::Histograms () {
@@ -45,7 +110,6 @@ Histograms::Histograms () {
   hlepId_         = new TH1F("hlepId","Lepton PDG ID",30,-15.,15.) ; 
   hnRecoEl_       = new TH1F("hnRecoEl","no. of reco el.",11,-.5,10.5) ; 
   hnPFEl_         = new TH1F("hnPFEl","no. of PF el.",11,-.5,10.5) ; 
-  hptPFElRecoEl_  = new TH2F("hptPFElRecoEl","",1000,0.,1000.,1000,0.,1000.) ; 
   h1stElPt_       = new TH1F("h1stElPt","p_{T}^{1st e} (GeV/c)",1000,0.,1000.) ; 
   h2ndElPt_       = new TH1F("h2ndElPt","p_{T}^{2nd e} (GeV/c)",1000,0.,1000.) ; 
   h1stElEta_      = new TH1F("h1stElEta","#eta^{1st e} ",200,-4.,4.) ; 
@@ -81,7 +145,8 @@ bprimeAnalyzer :: bprimeAnalyzer (const std::string& infiles,const bool& isData,
   inputfiles_ (infiles),
   outfile_ ((char*)outfile.c_str(),"RECREATE"),
   isData_ (isData),
-  thisChain_ (0), 
+  thisChain_ (0),   	
+  bprimeEvtsTree_(0), 
   evtProc_ (0), 
   evtAccept_ (0), 
   nzcands_ (0),
@@ -97,6 +162,8 @@ bprimeAnalyzer :: bprimeAnalyzer (const std::string& infiles,const bool& isData,
   dataset_.wt = weight ;
   dataset_.lumi = lumiInt ;
   dataset_.evts = events ;
+
+  setHLTBits_(); 
 
   initHists_(histBeforeSelection_,"Before selection");
   initHists_(histElSelection_,"El. selection"); 
@@ -133,34 +200,29 @@ void bprimeAnalyzer :: process_ () {
   assert(!infile.fail()) ;
   if (strstr((char*)inputfiles_.c_str(),"Reduced")!=0) {
     thisChain_ = new TChain("root") ;   
-  }
-  else { 
+  } else {  
     thisChain_ = new TChain("bprimeKit/root") ; 
   }
-  infile >> inputFile ; 
-  if (strncmp(inputFile,"#",1)!=0 || strncmp(inputFile,"%",1)!=0)  { 
-    std::cout << " Rootfile read " << inputFile << std::endl; 
-    thisChain_->Add(inputFile) ; 
-    evtProc_ += thisChain_->GetEntries();
-    std::cout << "\ninfile " << inputFile << std::endl ; 
-
-    evtLoop_() ;
-    thisChain_->Reset() ; 
-  }
-  while (!infile.eof()) {
+  //infile >> inputFile ; 
+  //if (strncmp(inputFile,"#",1)!=0 || strncmp(inputFile,"%",1)!=0)  { 
+  //  std::cout << " Rootfile read " << inputFile << std::endl; 
+  //  thisChain_->Add(inputFile) ; 
+  //  evtProc_ += thisChain_->GetEntries();
+  //  std::cout << "\ninfile " << inputFile << std::endl ; 
+  //  evtLoop_() ;
+  //  thisChain_->Reset() ; 
+  //}
+  while (infile.good()) { 
     infile >> inputFile ; 
-      if(strncmp(inputFile,"#",1)==0) continue; 
-      if(strncmp(inputFile,"%",1)==0) {
-    	cout << "\nexiting\n " ; 
-        break ; 
-    }
+    if(strncmp(inputFile,"#",1)==0) continue; 
+    if(strncmp(inputFile,"%",1)==0) break ; 
     thisChain_->Add(inputFile); 
-    evtProc_ += thisChain_->GetEntries();
     std::cout << "\ninfile " << inputFile << std::endl ; 
-    evtLoop_();
-    thisChain_->Reset() ;
   }
   infile.close() ;   
+  evtProc_ = thisChain_->GetEntries(); 
+  evtLoop_();
+  thisChain_->Reset() ;
 
   if ( !isData_ ) { 
     normalizeHists_(histBeforeSelection_) ; 
@@ -176,12 +238,13 @@ void bprimeAnalyzer :: process_ () {
 
 void bprimeAnalyzer::initHists_(Histograms*& h,std::string str) {
 
-	outfile_.cd();
-	outfile_.mkdir((char*)str.c_str());
-	outfile_.cd((char*)str.c_str()) ; 
-	h = new Histograms();
-
-	return; 
+  outfile_.cd();
+  outfile_.mkdir((char*)str.c_str());
+  outfile_.cd((char*)str.c_str()) ; 
+  h = new Histograms();
+  outfile_.cd();
+  
+  return; 
 
 }
 
@@ -221,16 +284,27 @@ void bprimeAnalyzer::normalizeHists_ (Histograms* H) {
   H->heeBjetPhi_     ->Scale(weight) ; 
 
   return ; 
+
+}
+
+/**\ Set HLT bits */
+void bprimeAnalyzer::setHLTBits_ () {
+
+  for (int ii=0;ii<11;++ii) {
+    std::cout << " trig bit " << hltBitIndex[ii] << std::endl ; 
+  }
+
+  return ; 	
 }
 
 /**\ Event loop Apply Cuts fill Histograms */
-void bprimeAnalyzer:: evtLoop_ () {
+void bprimeAnalyzer::evtLoop_ () { 
 
-  GenInfoBranches GenInfo; 
+  GenInfoBranches    GenInfo ; 
   EvtInfoBranches    EvtInfo ; 
   VertexInfoBranches VtxInfo ; 
-  LepInfoBranches    LepInfo ;
-  JetInfoBranches    JetInfo ;
+  LepInfoBranches    LepInfo ; 
+  JetInfoBranches    JetInfo ; 
 
   GenInfo.Register(thisChain_) ; 
   EvtInfo.Register(thisChain_) ; 
@@ -238,68 +312,144 @@ void bprimeAnalyzer:: evtLoop_ () {
   LepInfo.Register(thisChain_,"PFLepInfo") ; 
   JetInfo.Register(thisChain_,"PFJetInfo") ; 
 
-  Double_t Weight3D[50][50][50];
+  double PUWeight3D[50][50][50];
   for(int ii=0;ii<50;ii++)
     for(int jj=0;jj<50;jj++)
       for(int kk=0;kk<50;kk++) 
-        Weight3D[ii][jj][kk]=0.;      
-  generate_weights(1, Weight3D);
+        PUWeight3D[ii][jj][kk]=0.;      
+  generateWeightsPU(1, PUWeight3D);
+
+  /**\ Event selection flags */
+  bool hasGoodEPpair(false) ; 
+  bool hasZCand(false) ; 
+  bool hasZCandPtGt95(false) ; 
+  bool hasBjetJetPtGt30(false) ; 
+  bool hasBJetPtGt65(false) ; 
+  bool hasBprimeCand(false) ; 
+
+  /**\ Event variables */ 
+  double weightPU(0.) ; 
+  double weightBtagging(0.) ; 
+  double weightBtaggingErrorP(0.) ; 
+  double weightBtaggingErrorM(0.) ; 
+  int nZCands(0) ; 
+  double mee(0.) ; 
+  double ptZ(0.) ; 
+  double etaZ(0.) ; 
+  double phiZ(0.) ;  
+  double njets(0) ; 
+  int    nbjets(0) ; 
+  int nBprimeCands(0.) ; 
+  double meeBjet(0.) ;  
+  double pt_eeBjet(0.) ; 
+  double eta_eeBjet(0.) ; 
+  double phi_eeBjet(0.) ; 
+  int nGoodVtxs(0) ; 
+  int nZPtGt95(0) ;  
+
+  //TFile* bprimef = new TFile("/nasdata2/devdatta/bprimeAnalyzerSkims/Data/bprimeCandSkims.root","RECREATE"); 
+  TFile* bprimef = new TFile("/nasdata2/devdatta/bprimeAnalyzerSkims/MC/Signal/bprimeCandSkims.root","RECREATE"); 
+  //TFile* bprimef = new TFile("/nasdata2/devdatta/bprimeAnalyzerSkims/MC/Signal/bprimeCandSkims.root","RECREATE"); 
+
+  TTree* zCandTree = thisChain_->CloneTree(0);
+  TBranch *brzweightPU             = zCandTree->Branch("weightPU",             &weightPU,             "weightPU/D"); 
+  zCandTree->SetName("zCandTree") ; 
+
+  TTree* bprimeCandTree = thisChain_->CloneTree(0); 
+  TBranch *brbprimeweightPU             = bprimeCandTree->Branch("weightPU",             &weightPU,             "weightPU/D"); 
+  TBranch *brbprimeweightBtagging       = bprimeCandTree->Branch("weightBtagging",       &weightBtagging      , "weightBtagging/D"); 
+  TBranch *brbprimeweightBtaggingErrorP = bprimeCandTree->Branch("weightBtaggingErrorP", &weightBtaggingErrorP, "weightBtaggingErrorP/D"); 
+  TBranch *brbprimeweightBtaggingErrorM = bprimeCandTree->Branch("weightBtaggingErrorM", &weightBtaggingErrorM, "weightBtaggingErrorM/D"); 
+  bprimeCandTree->SetName("bprimeCandTree") ; 
 
   /**\ Looping over events */ 
   for (int iEntry=0;iEntry<thisChain_->GetEntries();++iEntry) { 
 
-    /**\========print number of events done == == == == == == */  
-    //if (iEntry%1000 == 0) std::cout << " processing " << iEntry << "th entry\n" ; 
+    hasGoodEPpair = false ; 
+    hasZCand = false ; 
+    hasZCandPtGt95 = false ; 
+    hasBjetJetPtGt30 = false ; 
+    hasBJetPtGt65 = false ; 
+    hasBprimeCand = false ; 
 
-    /**\ Event selection flags */
-    bool hasGoodEP(false) ; 
-    bool hasZCand(false) ; 
-    bool hasZCandWithPtGt95(false) ; 
-    bool has1Bjet1JetGt30(false) ; 
-    bool hasBJetGt65(false) ; 
-    bool hasBprimeCand(false) ; 
+    weightPU = 0. ; 
+    weightBtagging = 1. ; 
+    weightBtaggingErrorP = 0. ; 
+    weightBtaggingErrorM = 0. ; 
+    nZCands = 0 ; 
+    mee = 0. ;
+    ptZ = 0. ;
+    etaZ = 0. ;
+    phiZ = 0. ; 
+    njets = 0 ; 
+    nbjets = 0 ; 
+    nBprimeCands = 0. ;
+    meeBjet = 0.; 
+    pt_eeBjet = 0. ; 
+    eta_eeBjet = 0. ; 
+    phi_eeBjet = 0. ; 
+    nGoodVtxs = 0 ; 
+    nZPtGt95 = 0 ;  
 
-    Double_t weightPU(0.); 
-    double nZCands(0); 
-    double nZPtGt95(0); 
-    double mee(0.);
-    double ptZ(0.);
-    double etaZ(0.);
-    double phiZ(0.); 
-    double njets(0) ; 
-    int    nbjets(0) ; 
-    double nBprimeCands(0.) ; 
-    double meeBjet(0.); 
-    double pt_eeBjet(0.); 
-    double eta_eeBjet(0.); 
-    double phi_eeBjet(0.); 
     el1Index_.clear() ; 
     el2Index_.clear() ; 
     jetIndex_.clear() ; 
     bjetIndex_.clear() ; 
+    std::vector<JetVariables> JetCollection; 
+
+    /**\ Btag weight variables */
+    int bquarks(0) ;
+    int cquarks(0) ;
+    int lquarks(0) ;
+    std::vector<double>v_bpt; 
+    std::vector<double>v_cpt; 
+    std::vector<double>v_lpt; 
+    std::vector<double>v_leta; 
+    bool getBtagWt(true) ; 
 
     thisChain_->GetEntry(iEntry) ; 
 
-    int nm1 = -1; int n0 = -1; int np1 = -1;
-    for(int i=0;i<EvtInfo.nBX;i++) {
-      if(EvtInfo.BXPU[i]==-1)
-        nm1=EvtInfo.nPU[i];
-      if(EvtInfo.BXPU[i]==0)
-        n0=EvtInfo.nPU[i];
-      if(EvtInfo.BXPU[i]==1)
-        np1=EvtInfo.nPU[i];
+    /**\ Get PU weight of event for MC */ 
+    if (!isData_) {
+      int nm1 = -1; int n0 = -1; int np1 = -1;
+      for(int i=0;i<EvtInfo.nBX;i++) {
+        if(EvtInfo.BXPU[i]==-1)  { nm1=EvtInfo.nPU[i]; } 
+        if(EvtInfo.BXPU[i]==0)   { n0=EvtInfo.nPU[i] ; } 
+        if(EvtInfo.BXPU[i]==1)   { np1=EvtInfo.nPU[i]; } 
+      }
+      weightPU = getWeightPU(nm1,n0,np1,PUWeight3D); 
+    } else { weightPU = 1; } 
+
+    /**\ Appy HLT requirement */
+    bool isPassHLT(false) ; 
+    int runno = EvtInfo.RunNo ;  
+    if (isData_) {
+      int hltBlock(-1) ; 
+      for (int iHLT=0;iHLT<11;++iHLT) {
+        if (runno>=beginRunNo[iHLT] && runno<=endRunno[iHLT]) { hltBlock=iHLT; break; } 
+      }
+      if (hltBlock>=0 && EvtInfo.TrgBook[hltBitIndex[hltBlock]]==1) { 
+        isPassHLT = true ; 
+      } else {isPassHLT = false ; }  
+    } else { // isMC 
+      for (int iHLT=0;iHLT<11;++iHLT) {
+        if (EvtInfo.TrgBook[hltBitIndex[iHLT]]==1 ) { 
+	  isPassHLT = true ; 
+	  break ; 
+	}
+	else {isPassHLT = false ;  }  
+      } 
     }
-    if (!isData_) weightPU = getPUWeights(nm1,n0,np1,Weight3D); 
-    else weightPU = 1; 
+
+    if (isPassHLT==false) continue ;  
 
     /**\ Select good vertices */
-    float nGoodVtxs(0.) ; 
     for (int iVtx=0; iVtx < VtxInfo.Size; ++iVtx) { 
-      if (VtxInfo.Type[iVtx]==1 && VtxInfo.isValid[iVtx] && VtxInfo.Ndof[iVtx]>4 && VtxInfo.Rho[iVtx]<2 && VtxInfo.z[iVtx]<24) {
-         ++nGoodVtxs ; 
-      }
+      if (VtxInfo.Type[iVtx]==1 && VtxInfo.isFake[iVtx]==false && VtxInfo.Ndof[iVtx]>4 && VtxInfo.Rho[iVtx]<2. && VtxInfo.z[iVtx]<24.) { ++nGoodVtxs ; } 
     }
 
+    if (isData_ && nGoodVtxs < 1)  { continue ; } 
+            
     /**\ Fill histBeforeSelection_ */ 
     histBeforeSelection_->hPUWeight_->Fill(weightPU) ; 
     for (int iBX=0; iBX < EvtInfo.nBX; ++iBX) {
@@ -307,12 +457,7 @@ void bprimeAnalyzer:: evtLoop_ () {
     }
     histBeforeSelection_->hnGoodVtxs_->Fill(nGoodVtxs,weightPU) ; 
 
-    if (isData_) {
-      if (nGoodVtxs < 1)  continue ; 
-    }
-            
     /**\ Start reconstruction of B' candidates */ 
-    /**\ Select first electron */ 
     for (int iEle=0; iEle < LepInfo.Size; ++iEle) {
       if (//isGoodElectron_(iEle)
               TMath::Abs(LepInfo.LeptonType[iEle])==11 
@@ -345,7 +490,7 @@ void bprimeAnalyzer:: evtLoop_ () {
               && ( TMath::Abs(LepInfo.Eta[jEle])<1.4442 || (TMath::Abs(LepInfo.Eta[jEle])>1.566 && TMath::Abs(LepInfo.Eta[jEle])<2.4) ) 
 	    ) {  
             el2Index_.push_back(jEle) ; 
-            hasGoodEP = true ; 		  
+            hasGoodEPpair = true ; 		  
 	    TLorentzVector ele14v (LepInfo.Px[iEle],LepInfo.Py[iEle],LepInfo.Pz[iEle],LepInfo.Energy[iEle]) ; 
 	    TLorentzVector ele24v (LepInfo.Px[jEle],LepInfo.Py[jEle],LepInfo.Pz[jEle],LepInfo.Energy[jEle]) ; 
             TLorentzVector zcand4v (ele14v+ele24v) ;
@@ -385,12 +530,13 @@ void bprimeAnalyzer:: evtLoop_ () {
 
 	      /**\ Sel 2: Z-cands above 95 GeV/c */ 
 	      if (ptZ > 95.) { 
-                hasZCandWithPtGt95 = true ; 		        
+                hasZCandPtGt95 = true ; 		        
 		++nZPtGt95 ; 
 
-	        /**\ Select good jets */
+	        /**\ Loop over jets */
                 for (int iJet=0;iJet < JetInfo.Size;++iJet) {
 
+                  /**\ Remove jets overlapping with leptons (e/mu) */ 
 	          bool jetLepOverlap(false) ; 
                   for (int iLep=0; iLep < LepInfo.Size; ++iLep) {
 
@@ -428,27 +574,6 @@ void bprimeAnalyzer:: evtLoop_ () {
                       if (lep4v.DeltaR(jet4v)<.5) jetLepOverlap = true; 
 		    }
 
-                    //if (TMath::Abs(LepInfo.LeptonType[iEle])==11 ) {
-                    //  TLorentzVector lep4v (LepInfo.Px[iLep],LepInfo.Py[iLep],LepInfo.Pz[iLep],LepInfo.Energy[iLep]) ;
-                    //  TLorentzVector jet4v (JetInfo.Px[iJet],JetInfo.Py[iJet],JetInfo.Pz[iJet],JetInfo.Energy[iJet]) ; 
-                    //  if (lep4v.Pt()>20. && lep4v.DeltaR(jet4v)<.5) {
-	            //    jetLepOverlap = true; 
-	            //  }
-                    //} 
-	            //if (TMath::Abs(LepInfo.LeptonType[iEle])==13) {
-                    //  TLorentzVector lep4v (LepInfo.Px[iLep],LepInfo.Py[iLep],LepInfo.Pz[iLep],LepInfo.Energy[iLep]) ;
-                    //  TLorentzVector jet4v (JetInfo.Px[iJet],JetInfo.Py[iJet],JetInfo.Pz[iJet],JetInfo.Energy[iJet]) ; 
-                    //  if (lep4v.Pt()>20. && lep4v.DeltaR(jet4v)<.5) {
-	            //    jetLepOverlap = true; 
-	            //  }
-	            //}
-		    //if (isGoodElectron_(iLep) || isGoodMuon_(iLep)) {
-                    //  TLorentzVector lep4v (LepInfo.Px[iLep],LepInfo.Py[iLep],LepInfo.Pz[iLep],LepInfo.Energy[iLep]) ; 
-                    //  TLorentzVector jet4v (JetInfo.Px[iJet],JetInfo.Py[iJet],JetInfo.Pz[iJet],JetInfo.Energy[iJet]) ; 
-		    //  if (lep4v.Pt()>20. && lep4v.DeltaR(jet4v)<.5) {
-                    //    jetLepOverlap = true; 			      
-		    //  }
-		    //}
 	          }
 	          if (jetLepOverlap) continue ;  // Reject jets overlapping with leptons 
             
@@ -471,10 +596,10 @@ void bprimeAnalyzer:: evtLoop_ () {
 	          histZPtGt95_->hallJetsEta_->Fill(JetInfo.Eta[iJet]) ; 
 
 	          /**\ Pick b-jets here */
-	          if (JetInfo.TrackCountHiPurBJetTags[iJet]>1.93) {
-                    ++nbjets ; 
-	            bjetIndex_.push_back(iJet) ; 		    
-		  } else continue ; // apply b-tagging criteria 
+	          if (JetInfo.TrackCountHiPurBJetTags[iJet]<=1.93) { continue ; } // apply b-tagging criteria 
+
+                  ++nbjets ; 
+	          bjetIndex_.push_back(iJet) ; 		    
 
 	          /**\ Fill histZPtGt95_ */ 
                   histZPtGt95_->hallBJetsPt_->Fill(JetInfo.Pt[iJet],weightPU); 
@@ -499,13 +624,51 @@ void bprimeAnalyzer:: evtLoop_ () {
 
 	        /**\ Sel 3: Requiring at least one b-jet and one other jet */ 
 	        if (njets >=2 && nbjets >=1) { 
-                  has1Bjet1JetGt30 = true ; 			
+
+                  hasBjetJetPtGt30 = true ; 			
+
+		  /**\ Getting Btag weight */
+		  if (getBtagWt==true) {
+                    getBtagWt = false ;			  
+	            for (unsigned iJet=0;iJet< jetIndex_.size();++iJet) { 
+                      bool btag(false) ; 
+                      int flavour = TMath::Abs(JetInfo.GenPdgID[jetIndex_[iJet]]) ; 
+                      double ptj = JetInfo.Pt[jetIndex_[iJet]] ;
+		      double etaj = JetInfo.Eta[jetIndex_[iJet]] ;
+	              for (unsigned iBjet=0;iBjet< bjetIndex_.size();++iBjet) { 
+                        if ( jetIndex_[iJet]==bjetIndex_[iBjet] ) { 
+                          btag = true ; 
+		          break ; 
+		        }
+		      }
+		      JetVariables Jet(btag,flavour,ptj,etaj) ; 
+		      JetCollection.push_back(Jet) ; 
+		    }
+                    BTagWeight bTagWeight(JetCollection,isData_,1.93,0,1,nbjets) ; 
+                    int ntags(1) ;  
+                    weightBtagging = bTagWeight.weight(ntags) ; 
+		  }
 
 	          for (unsigned int iBjet=0;iBjet< bjetIndex_.size();++iBjet) { 
 
+		    /**\ Compute b-tagging SF weight */ 
+                    if (TMath::Abs(JetInfo.GenPdgID[bjetIndex_[iBjet]])==5) {
+                      ++bquarks ; 
+		      v_bpt.push_back(JetInfo.Pt[bjetIndex_[iBjet]]) ; 
+		    }
+                    if (TMath::Abs(JetInfo.GenPdgID[bjetIndex_[iBjet]])==4) {
+		      ++cquarks ; 
+		      v_cpt.push_back(JetInfo.Pt[bjetIndex_[iBjet]]) ; 
+                    }
+                    if (TMath::Abs(JetInfo.GenPdgID[bjetIndex_[iBjet]]) <4) { 
+		      ++lquarks ; 
+		      v_lpt.push_back(JetInfo.Pt[bjetIndex_[iBjet]]) ; 
+		      v_leta.push_back(JetInfo.Eta[bjetIndex_[iBjet]]) ; 
+		    }
+
                     /**\ Sel 4: Select Bprime candidates */ 
                     if (JetInfo.Pt[bjetIndex_[iBjet]] > 65.) { 
-                      hasBJetGt65 = true ; 			    
+                      hasBJetPtGt65 = true ; 			    
 
 	              /**\ Reconstruct Bprime candidate */
                       double meeBjetEnergy = LepInfo.Energy[iEle]+LepInfo.Energy[jEle]+JetInfo.Energy[bjetIndex_[iBjet]] ; 
@@ -520,9 +683,9 @@ void bprimeAnalyzer:: evtLoop_ () {
                       eta_eeBjet = bprime4v.Eta() ; 
                       phi_eeBjet = bprime4v.Phi() ; 
 
+                      hasBprimeCand = true ; 			
                       ++nBprimeCands ; 	
                       ++nBprimeCands_ ; 
-                      hasBprimeCand = true ; 			
 
 	              /**\ Fill histBprimeCand_ */ 
                       histZPtGt95_->hallBJetsPt_->Fill(JetInfo.Pt[bjetIndex_[iBjet]],weightPU); 
@@ -545,29 +708,38 @@ void bprimeAnalyzer:: evtLoop_ () {
                       histBprimeCand_->hleadingBJetEta_->Fill(JetInfo.Eta[bjetIndex_[0]],weightPU) ; 
                       histBprimeCand_->hleadingBJetPhi_->Fill(JetInfo.Phi[bjetIndex_[0]],weightPU) ; 
 	          }
-		} // Njets >= 1 && Nbjets >= 1 
+		} // Njets >= 2 && Nbjets >= 1 
 	      } // pTZ > 95 GeV/c 
-            } // Z-candidate accepted 
+            } // Z-candidate accepted: MZ =[60,120] GeV/c2 
           } // 2nd ele accepted 
-        } // loop over all ele: 2
+        } // loop over all ele: 2 
       } // 1st ele accepted 
-    } // loop over all ele: 1
+    } // loop over all ele: 1 
 
     if (hasZCand) { 
+      brzweightPU->Fill(); 	    
+      zCandTree->Fill(); 
       ++nzcands_ ; 
       for (int iBX=0; iBX < EvtInfo.nBX; ++iBX) {
         histZCand_->hnPU_->Fill(EvtInfo.nPU[iBX],weightPU) ; 
       }
+      histZCand_->hPUWeight_->Fill(weightPU) ; 
       histZCand_->hnGoodVtxs_->Fill(nGoodVtxs,weightPU) ;  
       histZCand_->hnZcands_->Fill(nZCands,weightPU) ;  
       histZCand_->hnJets_->Fill(njets,weightPU) ;  
-      if (hasZCandWithPtGt95) ++nzPtGt95_ ; 
+      if (hasZCandPtGt95) ++nzPtGt95_ ; 
     } 
     if (hasBprimeCand) {
+      brbprimeweightPU             ->Fill() ;  
+      brbprimeweightBtagging       ->Fill() ; 
+      brbprimeweightBtaggingErrorP ->Fill() ; 
+      brbprimeweightBtaggingErrorM ->Fill() ; 
+      bprimeCandTree->Fill(); 
       ++evtAccept_; 
       for (int iBX=0; iBX < EvtInfo.nBX; ++iBX) {
         histBprimeCand_->hnPU_->Fill(EvtInfo.nPU[iBX],weightPU) ; 
       }
+      histBprimeCand_->hPUWeight_->Fill(weightPU) ; 
       histBprimeCand_->hnGoodVtxs_->Fill(nGoodVtxs,weightPU) ;  
       histBprimeCand_->hnZcands_->Fill(nZCands,weightPU) ;  
       histBprimeCand_->hnJets_->Fill(njets,weightPU) ;  
@@ -576,6 +748,12 @@ void bprimeAnalyzer:: evtLoop_ () {
     }
 
   } // event loop 
+
+  zCandTree->Write("",TObject::kOverwrite);
+  delete zCandTree; 
+  bprimeCandTree->Write("",TObject::kOverwrite); 
+  delete bprimeCandTree; 
+  delete bprimef; 
 
 }
 
@@ -634,6 +812,49 @@ bool bprimeAnalyzer:: isGoodMuon_ (int& iMu) {
    } else isGoodMuon = false ; 
 
   return isGoodMuon ; 	
+
+}
+
+int main (int argc, char **argv) { 
+
+  time_t start, stop ; 
+  double time_elapsed ; 
+  time(&start) ; 
+
+  std::string ip ; 
+  std::string op ; 
+  double cs(0.) ;
+  double wt(0.) ; 
+  bool isData(0) ;
+  double lumi(0) ; 
+  double events(0);
+
+  std::cout << " enter input\n" ;
+  std::cin >> ip ;
+  std::cout << " enter output\n" ; 
+  std::cin >> op ; 
+  std::cout << " enter isData (=1 for data =0 for MC)\n" ;
+  std::cin >> isData ;
+  if (!isData) {
+    std::cout << " enter sample cross-section\n" ;
+    std::cin >> cs ; 
+    std::cout << " enter sample weight\n" ;
+    std::cin >> wt ; 
+    std::cout << " enter integrated luminosity \n" ;
+    std::cin >> lumi ; 
+    std::cout << " enter total number of events\n" ;
+    std::cin >> events;
+  }
+
+  bprimeAnalyzer* bprimeanalyzer = new bprimeAnalyzer(ip,isData,cs,wt,lumi,events,op) ; 
+  bprimeanalyzer->process_() ; 
+  delete bprimeanalyzer; 
+  
+  time(&stop) ; 
+  time_elapsed = difftime(stop, start) ; 
+  std::cout << "\n Time taken for program " << time_elapsed << " seconds \n" ;
+
+  return 0 ; 
 
 }
 

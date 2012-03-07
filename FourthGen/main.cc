@@ -1,7 +1,7 @@
 #include <iostream>
 #include "bprimeAnalyzer.h"
 
-int main () {
+int main (int argc, char **argv) { 
 
   time_t start, stop ; 
   double time_elapsed ; 
@@ -32,11 +32,9 @@ int main () {
     std::cin >> events;
   }
 
-  //bprimeAnalyzer* bprimeanalyzer = new bprimeAnalyzer(ip,isData,cs,op) ; 
   bprimeAnalyzer* bprimeanalyzer = new bprimeAnalyzer(ip,isData,cs,wt,lumi,events,op) ; 
   bprimeanalyzer->process_() ; 
   delete bprimeanalyzer; 
-  //bprimeanalyzer->~bprimeAnalyzer() ; 
   
   time(&stop) ; 
   time_elapsed = difftime(stop, start) ; 
