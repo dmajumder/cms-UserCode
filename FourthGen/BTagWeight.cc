@@ -49,59 +49,122 @@ bool BTagWeight::filter(const int& t) {
   return (t >= minTags && t <= maxTags);
 }
 
-double BTagWeight::getSF(int& flavour, double& pt, double& eta, TString& string) {
+double BTagWeight::getSF(int& flavour, double& pt, double& eta, TString& jetTag) {
   double sf(0.)	; 
-  if (flavour==5 || flavour==4) {
-    sf = sfbc_TCHPM (string,pt,eta) ; 
-  } else if (flavour<4) {
-    sf = sflight_TCHPM(string,pt,eta) ; 
-  } else sf = 0. ; 
+  if (jetTag=="mean") {
+    if (flavour==5 || flavour==4) {
+      sf = sfbc_TCHPM (jetTag,pt,eta) ; 
+    } else if (flavour<4) {
+      sf = sflight_TCHPM("mean",pt,eta) ; 
+    } else sf = 0. ; 
+  } else if (jetTag=="errorP") {
+    if (flavour==5) {
+      sf = sfbc_TCHPM ("mean",pt,eta) + sferrorb_TCHPM("",pt,eta) ; 
+    } else if (flavour==4) {
+      sf = sfbc_TCHPM ("mean",pt,eta) + sferrorc_TCHPM("",pt,eta) ;	
+    } else if (flavour<4) {
+      sf = sflight_TCHPM("max",pt,eta) ; 
+    }  else sf = 0. ;
+  } else if (jetTag=="errorM") {
+    if (flavour==5) {
+      sf = sfbc_TCHPM ("mean",pt,eta) - sferrorb_TCHPM("",pt,eta) ; 
+    } else if (flavour==4) {
+      sf = sfbc_TCHPM ("mean",pt,eta) - sferrorc_TCHPM("",pt,eta) ;	
+    } else if (flavour<4) {
+      sf = sflight_TCHPM("min",pt,eta) ; 
+    }  else sf = 0. ; 
+  } else std::cout << "\n Wrong tag passed to BTagWeight::getSF\n" << std::endl ; 
   return sf ; 
 }
 
-double BTagWeight::getEff(bool& isData,int& flavour, double& pt, double& eta, TString& string,double& disc) {
+double BTagWeight::getEff(int& flavour, double& pt, double& eta, TString& jetTag,double& disc) {
   double eff(0.) ; 
-  if (flavour==5 || flavour==4) {
-    eff = btagEff_bc(isData,string,flavour,disc) ; 
-  } else if (flavour<4) {
-    eff = btagEff_light(isData,string,pt,eta) ; 
-  } else eff = 0 ; 
+  if (jetTag=="mean") {
+    if (flavour==5 || flavour==4) {
+      eff = btagEff_bc(jetTag,flavour,disc) ; 
+    } else if (flavour<4) {
+      eff = btagEff_light(jetTag,pt,eta) ; 
+    } else eff = 0 ; 
+  } else if (jetTag=="errorP") {
+    if (flavour==5 || flavour==4) {
+       eff = btagEff_bc(jetTag,flavour,disc) ;	    
+    }  else if (flavour<4) {
+       eff = btagEff_light(jetTag,pt,eta) ; 
+    }
+  } else if (jetTag=="errorM") { 
+    if (flavour==5 || flavour==4) {
+       eff = btagEff_bc(jetTag,flavour,disc) ;	    
+    }  else if (flavour<4) {
+       eff = btagEff_light(jetTag,pt,eta) ; 
+    }
+  } else std::cout << "\n Wrong tag passed to BTagWeight::getEff\n" << std::endl ; 
   return eff ; 
 } 
 
 #include <TString.h> 
 
-double BTagWeight::weight(const int& tags=1) { 
-
-  //if(!filter(tags)) {
-  //    return 0;
-  //}
+double BTagWeight::weight(const TString& tag="mean") { 
 
   for (unsigned iJet=0;iJet<Jets.size();++iJet) {
-    TString mean = "mean" ; 
-    Jets[iJet].sf = getSF(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,mean); 
-    Jets[iJet].eff = getEff(isData,Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,mean,disc);  
+    TString jetTag = "mean" ; 
+    Jets[iJet].sf = getSF(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,jetTag); 
+    Jets[iJet].eff = getEff(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,jetTag,disc); 
+    jetTag = "errorP" ; 
+    Jets[iJet].sfErrorP = getSF(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,jetTag); 
+    Jets[iJet].effErrorP = getEff(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,jetTag,disc);  
+    jetTag = "errorM" ; 
+    Jets[iJet].sfErrorM = getSF(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,jetTag); 
+    Jets[iJet].effErrorM = getEff(Jets[iJet].partonFlavour,Jets[iJet].ptj,Jets[iJet].etaj,jetTag,disc);  
   }
 
   /**\ Event weight for b-taggig */
   double weight(0.) ; 
   if (isData) { weight = 1. ; } else {
-    if (Jets.size()==1 && nbjets==1) { weight = Jets[0].sf ; std::cout << "Comment c'est possible!!\n" ; }
-    if (Jets.size()==2 && nbjets==1) {
-      int nbtagged(0) ; 
-      double sfb, sfNotb ;
-      double eb, eNotb ; 
-      for(unsigned iJet=0;iJet<Jets.size();++iJet) {
-        if (Jets[iJet].isBtag==true) { 
-          sfb = Jets[iJet].sf ; 
-	  ++nbtagged; 
-	} else if (Jets[iJet].isBtag==false) { 
-	  sfNotb = Jets[iJet].sf ;  
-	  eNotb = Jets[iJet].eff ;
-	}
+    if (tag=="mean") {
+      if (Jets.size()==1 && nbjets==1) { weight = Jets[0].sf ; std::cout << "Comment c'est possible!!\n" ; }
+      if (Jets.size()==2 && nbjets==1) {
+        int nbtagged(0) ; 
+        double sfb, sfNotb ;
+        double eb, eNotb ; 
+        for(unsigned iJet=0;iJet<Jets.size();++iJet) {
+          if (Jets[iJet].isBtag==true) { 
+            sfb = Jets[iJet].sf ; 
+            ++nbtagged; 
+          } else if (Jets[iJet].isBtag==false) { 
+            sfNotb = Jets[iJet].sf ;  
+            eNotb = Jets[iJet].eff ;
+          }
+        }
+        weight = sfb*(1.-eNotb*sfNotb)/sfNotb ; 
       }
-      weight = sfb*(1-eNotb*sfNotb)/sfNotb ; 
-    }
+      double ineffData(1.);
+      double ineffMC(1.);
+      for (unsigned iJet=0;iJet<Jets.size();++iJet) { 
+        ineffData *= (1.-Jets[iJet].eff*Jets[iJet].sf) ; 
+        ineffMC *= (1.-Jets[iJet].eff) ; 
+      }
+      if (1.-ineffMC!=0.) weight = (1.-ineffData)/(1.-ineffMC) ; 
+      else if ((1.-ineffData) == 0. && (1.-ineffMC)==0.) weight = 1. ; 
+    } else if (tag=="errorP") {
+      double ineffData(1.);
+      double ineffMC(1.);
+      for (unsigned iJet=0;iJet<Jets.size();++iJet) { 
+        ineffData *= (1.-Jets[iJet].eff*Jets[iJet].sfErrorP) ; 
+        ineffMC *= (1.-Jets[iJet].effErrorP) ; 
+      }
+      if (1.-ineffMC!=0.) weight = (1.-ineffData)/(1.-ineffMC) ; 
+      else if ((1.-ineffData) == 0. && (1.-ineffMC)==0.) weight = 1. ; 
+    } else if (tag=="errorM") {
+      double ineffData(1.);
+      double ineffMC(1.);
+      for (unsigned iJet=0;iJet<Jets.size();++iJet) { 
+        ineffData *= (1.-Jets[iJet].eff*Jets[iJet].sfErrorM) ; 
+        ineffMC *= (1.-Jets[iJet].effErrorM) ; 
+      }
+      if (1.-ineffMC!=0.) weight = (1.-ineffData)/(1.-ineffMC) ; 
+      else if ((1.-ineffData) == 0. && (1.-ineffMC)==0.) weight = 1. ; 
+      if ((1.-ineffData) == 0. || (1.-ineffMC)==0.) std::cout << " BTagWeight::weight weight = " << weight << " 1.-ineffMC = " << 1.-ineffMC << " 1.-ineffData " << 1.-ineffData << std::endl; 
+    } else std::cout << "\n Wrong tag passed to BTagWeight::weight\n" << std::endl ; 
   }
   return weight ; 
 

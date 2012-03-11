@@ -24,7 +24,8 @@ struct Dataset {
 #include <TH3.h>
 
 struct Hists{
-  TH1F* hPUWeight_      ; 
+  TH1F* hweightPU_      ; 
+  TH1F* hweightBtagging_; 
   TH1F* hnPU_           ; 
   TH1F* hnGoodVtxs_     ; 
   TH1F* hlepId_         ; 
@@ -68,101 +69,6 @@ struct Histograms : public Hists {
 };
 #endif 
 
-#ifndef BTAGWEIGHTER
-#define BTAGWEIGHTER
-
-#include <vector>
-
-class BTagWeighter { 
-	private:
- static const double ptmin[14] ; 
- static const double ptmax[14] ;
- static const double SFb_error[14] ;
-
-	public:
-  BTagWeighter () {} ;
-  ~BTagWeighter () {} ;
-
-  /**\ B- C-jet SFs */ 
-  double sfbc_TCHPM (TString meanminmax,double pt, double eta) { 
-    if (pt >=30. && pt <= 670. ) return  0.616456*((1.+(0.145816*pt))/(1.+(0.0904067*pt))) ; 
-    else if (pt > 670.) { 
-      pt = 670. ;
-      return 0.616456*((1.+(0.145816*pt))/(1.+(0.0904067*pt))) ; 
-    } else return 0; 
-  }
-
- /**\ B-jet SF errors */  
- double sferrorb_TCHPM (TString meanminmax,double pt, double eta) {
-   int ptbin(-1) ;
-   double error(0.) ; 
-   for (int ii=0;ii<14;++ii) { 
-     if (pt>=ptmin[ii] && pt<ptmax[ii]) { ptbin = ii ; break ; }
-     else if (pt>ptmax[13]) { ptbin = 13 ; break ; }
-   } 
-   if (ptbin>=0) error = SFb_error[ptbin] ; 
-   else error = 0 ; 
-   return error;
- }
-
- /**\ C-jet SF errors */  
- double sferrorc_TCHPM (TString meanminmax,double pt, double eta) {
-   int ptbin(-1) ;
-   double error(0.) ; 
-   for (int ii=0;ii<14;++ii) { 
-     if (pt>=ptmin[ii] && pt<ptmax[ii]) { ptbin = ii ; break ; }
-     else if (pt>ptmax[13]) { ptbin = 13 ; break ; }
-   } 
-   if (ptbin>=0) error = 2.*SFb_error[ptbin] ; 
-   else error = 0 ; 
-   return error;
- }
-
- /**\ Light-jet SF and SF errors */  
- double sflight_TCHPM (TString meanminmax,Float_t x, Float_t eta) { 
- 
-   if( eta >= 0.0 && eta < 0.8)   {
-   	if( meanminmax == "mean" ) return ((1.27011+(-0.000869141*x))+(2.49796e-06*(x*x)))+(-2.62962e-09*(x*(x*x)));
-   	if( meanminmax == "min" )  return ((1.12949+(-0.000678492*x))+(2.02219e-06*(x*x)))+(-2.21675e-09*(x*(x*x)));
-   	if( meanminmax == "max" )  return ((1.41077+(-0.00105992*x))+(2.97373e-06*(x*x)))+(-3.0425e-09*(x*(x*x)));
-   } else if( eta >= 0.8 && eta < 1.6)   {
-   	if( meanminmax == "mean" ) return ((1.36167+(-0.00153237*x))+(4.54567e-06*(x*x)))+(-4.38874e-09*(x*(x*x)));
-   	if( meanminmax == "min" )  return ((1.21289+(-0.00126411*x))+(3.81676e-06*(x*x)))+(-3.75847e-09*(x*(x*x)));
-   	if( meanminmax == "max" )  return ((1.51053+(-0.00180085*x))+(5.27457e-06*(x*x)))+(-5.01901e-09*(x*(x*x)));
-   }  else if( eta >= 1.6 && eta < 2.4)   {
-   	if( meanminmax == "mean" ) return ((1.22696+(0.000249231*x))+(9.55279e-08*(x*x)))+(-1.04034e-09*(x*(x*x)));
-   	if( meanminmax == "min" )  return ((1.07572+(0.00055366*x))+(-9.55796e-07*(x*x)))+(-3.73943e-11*(x*(x*x)));
-   	if( meanminmax == "max" )  return ((1.3782+(-5.52498e-05*x))+(1.14685e-06*(x*x)))+(-2.04329e-09*(x*(x*x)));
-   } else return 0; 
- 
-   return 0; 
- 
- } ; 
-
-};
-
-const double BTagWeighter::ptmin[14] = {30., 40., 50., 60., 70., 80., 100., 120., 160., 210., 260., 320., 400., 500.}; 
-const double BTagWeighter::ptmax[14] = {40., 50., 60., 70., 80.,100., 120., 160., 210., 260., 320., 400., 500., 670.};
-
-const double BTagWeighter::SFb_error[14] = { 
- 0.0365776,
- 0.036307,
- 0.0261062,
- 0.0270308,
- 0.0276016,
- 0.0175067,
- 0.0179022,
- 0.0198104,
- 0.0197836,
- 0.024912,
- 0.0273767,
- 0.0398119,
- 0.0418751,
- 0.0605975 
-}; 
-
-#endif
-
 #ifndef BPRIMEANALYZER_00_00_00_H
 #define BPRIMEANALYZER_00_00_00_H
 
@@ -183,6 +89,10 @@ const double BTagWeighter::SFb_error[14] = {
  *                    - name of outfile 
  * 
  * */
+
+class LepInfoBranches ; 
+
+static const int nmaxBprimes =  15 ; 
 
 class bprimeAnalyzer {
 
@@ -208,13 +118,12 @@ class bprimeAnalyzer {
   /**\ Event loop function */
   virtual void evtLoop_ () ;
   /**\ Returns true for electrons pasing electron ID */
-  virtual bool isGoodElectron_ (int&) ; 
+  virtual bool isGoodElectron_ (LepInfoBranches*,int&,int&) ; 
   /**\ Returns true for muons passing muon ID */
-  virtual bool isGoodMuon_ (int&) ; 
-
-	private:
+  virtual bool isGoodMuon_ (LepInfoBranches*,int&,int&) ; 
 
   std::string inputfiles_ ;
+  TString outfileName_ ; 
   TFile outfile_ ;
   bool isData_ ; 
   Dataset dataset_ ;
@@ -227,6 +136,7 @@ class bprimeAnalyzer {
   Histograms* histZCand_ ; 
   Histograms* histZPtGt95_ ; 
   Histograms* histBprimeCand_ ; 
+  Histograms* histBprimeCandBtagScaled_ ; 
 
   TTree* bprimeEvtsTree_ ; 
 
@@ -241,6 +151,23 @@ class bprimeAnalyzer {
   std::vector<int> el2Index_ ; 
   std::vector<int> jetIndex_ ; 
   std::vector<int> bjetIndex_ ; 
+
+  struct BPRIMECANDS {
+    int _ele1Index[nmaxBprimes] ; 
+    int _ele2Index[nmaxBprimes] ; 
+    int _bjetIndex[nmaxBprimes] ; 
+    double _bprimeMass[nmaxBprimes] ; 
+    double _bprimePt[nmaxBprimes] ; 
+    double _bprimeEta[nmaxBprimes] ; 
+    double _bprimePhi[nmaxBprimes] ; 
+    double _zMass[nmaxBprimes] ; 
+    double _zPt[nmaxBprimes]  ; 
+    double _zEta[nmaxBprimes] ; 
+    double _zPhi[nmaxBprimes] ; 
+    double _bjetPt[nmaxBprimes] ; 
+    double _bjetEta[nmaxBprimes] ; 
+    double _bjetPhi[nmaxBprimes] ; 
+  }; 
   
 };
 

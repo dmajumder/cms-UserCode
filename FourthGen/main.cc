@@ -1,5 +1,6 @@
 #include <iostream>
 #include "bprimeAnalyzer.h"
+#include "reweightMC.h" 
 
 int main (int argc, char **argv) { 
 
@@ -32,9 +33,13 @@ int main (int argc, char **argv) {
     std::cin >> events;
   }
 
-  bprimeAnalyzer* bprimeanalyzer = new bprimeAnalyzer(ip,isData,cs,wt,lumi,events,op) ; 
-  bprimeanalyzer->process_() ; 
-  delete bprimeanalyzer; 
+  //bprimeAnalyzer* bprimeanalyzer = new bprimeAnalyzer(ip,isData,cs,wt,lumi,events,op) ; 
+  //bprimeanalyzer->process_() ; 
+  //delete bprimeanalyzer; 
+
+  reweightMC* reweightmc = new reweightMC(ip,isData,cs,wt,lumi,events,op) ; 
+  reweightmc->process_() ; 
+  delete reweightmc; 
   
   time(&stop) ; 
   time_elapsed = difftime(stop, start) ; 

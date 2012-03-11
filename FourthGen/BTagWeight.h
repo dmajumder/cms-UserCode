@@ -16,7 +16,11 @@ struct JetVariables {
   double ptj;
   double etaj; 
   double eff;
+  double effErrorP;
+  double effErrorM;
   double sf; 
+  double sfErrorP; 
+  double sfErrorM; 
 };
 
 class BTagWeight {
@@ -25,7 +29,7 @@ class BTagWeight {
 
   explicit BTagWeight( const std::vector<JetVariables>& JetsIn,const bool& isData=false, const double& discIn=1.93,const int& minTagsIn=0, const int& maxTagsIn=1,const int& nbjetsIn=1) ; 
   ~BTagWeight() {}; 
-  double weight(const int& tags); 
+  double weight(const TString&); 
 
  private:
 
@@ -38,7 +42,7 @@ class BTagWeight {
 
   bool filter(const int& t);
   double getSF(int& flavour, double& pt, double& eta, TString& string) ; 
-  double getEff(bool& isData,int& flavour, double& pt, double& eta, TString& string,double& disc) ; 
+  double getEff(int& flavour, double& pt, double& eta, TString& string,double& disc) ; 
 
   static const double ptmin[14] ; 
   static const double ptmax[14] ;
@@ -99,21 +103,21 @@ class BTagWeight {
   }  
 
   /**\ Btagging efficiency for b and c quarks */
-  double btagEff_bc (bool& isData,TString& mode,int& flavour,double& disc) {
+  double btagEff_bc (TString& mode,int& flavour,double& disc) {
     double eff(0) ; 
     if (isData) {
-      if (mode=="Efficiency") eff = 9.83842428415e-06*disc*disc*disc*disc +  -0.000556835427293*disc*disc*disc +  0.0123891144567*disc*disc +  -0.141658673059*disc +  0.804455651041 ; 
-      if (mode=="Error")eff = 1.23607953977e-05*disc*disc*disc*disc + -0.000639251438742*disc*disc*disc + 0.0131227817518*disc*disc + -0.14535620858*disc + 0.854260405647 ; 
+      if (mode=="mean") eff = 9.83842428415e-06*disc*disc*disc*disc +  -0.000556835427293*disc*disc*disc +  0.0123891144567*disc*disc +  -0.141658673059*disc +  0.804455651041 ; 
+      if (mode=="errorP" || mode=="errorM") eff = 1.23607953977e-05*disc*disc*disc*disc + -0.000639251438742*disc*disc*disc + 0.0131227817518*disc*disc + -0.14535620858*disc + 0.854260405647 ; 
     } 
     if (!isData) {
-      if (mode=="Efficiency" && TMath::Abs(flavour)==5) eff = 1.26119661124e-05*disc*disc*disc*disc +  -0.000683198597977*disc*disc*disc +  0.0145106168149*disc*disc +  -0.159575511553*disc +  0.887707865272 ; 
-      if(mode=="Efficiency" && TMath::Abs(flavour)==4) eff = 0.451288118581*exp(-0.0213290505241*disc*disc*disc + 0.356020789904*disc*disc + -2.20158883207*disc + 1.84838018633 ) ; 
+      if (/*mode=="mean" &&*/ TMath::Abs(flavour)==5) eff = 1.26119661124e-05*disc*disc*disc*disc +  -0.000683198597977*disc*disc*disc +  0.0145106168149*disc*disc +  -0.159575511553*disc +  0.887707865272 ; 
+      if(/*mode=="mean" &&*/ TMath::Abs(flavour)==4) eff = 0.451288118581*exp(-0.0213290505241*disc*disc*disc + 0.356020789904*disc*disc + -2.20158883207*disc + 1.84838018633 ) ; 
     } 
     return eff ; 
   }
   
   /**\ Btagging efficiency for light quarks */ 
-  double btagEff_light (bool& isData,TString& mode,double& pt,double& eta) {
+  double btagEff_light (TString& mode,double& pt,double& eta) {
     double eff(0.) ; 
     if (pt < 20.) {
       eff = 0;
@@ -121,13 +125,13 @@ class BTagWeight {
     }
     else if (pt > 670.) pt = 670 ; 
     if(eta>=0.0 && eta<0.8) {
-      if( mode == "mean" ) eff = (((-0.00464673+(0.000247485*pt))+(9.13236e-07*(pt*pt)))+(-2.49994e-09*(pt*(pt*pt))))+(1.65678e-12*(pt*(pt*(pt*pt))));
+      /*if( mode == "mean" )*/ eff = (((-0.00464673+(0.000247485*pt))+(9.13236e-07*(pt*pt)))+(-2.49994e-09*(pt*(pt*pt))))+(1.65678e-12*(pt*(pt*(pt*pt))));
     }
     if(eta>=0.8 && eta<1.6) {
-      if( mode == "mean" ) eff = (((-0.0060878+(0.000297422*pt))+(1.13369e-06*(pt*pt)))+(-2.84945e-09*(pt*(pt*pt))))+(1.64721e-12*(pt*(pt*(pt*pt))));
+      /*if( mode == "mean" )*/ eff = (((-0.0060878+(0.000297422*pt))+(1.13369e-06*(pt*pt)))+(-2.84945e-09*(pt*(pt*pt))))+(1.64721e-12*(pt*(pt*(pt*pt))));
     }
     if(eta>=1.6 && eta<2.4) { 
-      if( mode == "mean" ) eff = (((-0.00836219+(0.000391889*pt))+(2.78156e-07*(pt*pt)))+(-6.14017e-10*(pt*(pt*pt))))+(-1.30592e-13*(pt*(pt*(pt*pt))));
+      /*if( mode == "mean" )*/ eff = (((-0.00836219+(0.000391889*pt))+(2.78156e-07*(pt*pt)))+(-6.14017e-10*(pt*(pt*pt))))+(-1.30592e-13*(pt*(pt*(pt*pt))));
     }
     //if(eta>=0.0 && eta<2.4) {
     //  if( mode == "mean" ) eff = (((-0.00609327+(0.00029725*pt))+(9.46617e-07*(pt*pt)))+(-2.71065e-09*(pt*(pt*pt))))+(1.77968e-12*(pt*(pt*(pt*pt))));
