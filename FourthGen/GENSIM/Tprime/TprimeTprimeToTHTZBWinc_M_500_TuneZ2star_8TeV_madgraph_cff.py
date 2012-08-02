@@ -11,8 +11,6 @@ generator = cms.EDFilter("Pythia6HadronizerFilter",
         pythiaUESettingsBlock,
         processParameters = cms.vstring(
 	    'PMAS(25,1)= 125.00D0    !mass of Higgs', 
-            'CKIN(1)   = 120.0D0', 
-            'CKIN(2)   = 130.0D0', 
             'MSTP(1) = 4',
             'MSEL=8          ! fourth generation (t4) fermions',
 	    'MWID(8)=2',
