@@ -248,7 +248,13 @@ HiggsTagValidation::HiggsTagValidation(const edm::ParameterSet& iConfig) :
 	histProducer.AddHisto("jet_ipTagTrack_dz",       "Dz  of impactParameterTag tracks",     100,-10.,10.); 
 	histProducer.AddHisto("jet_ipTagTrack_zIP",       "z IP  of impactParameterTag tracks",     100,-10.,10.); 
 
-	histProducer.AddHisto("jet_ipTagNSV"    ,"No. of subjets",                                    20,0,20    ); 
+	histProducer.AddHisto("jet_svTagNSV"          ,"No. of SVs",                              20,0,20    ); 
+	histProducer.AddHisto("jet_svTagChi2"         ,"SV #chi^{2}",                             20,0,20    ); 
+	histProducer.AddHisto("jet_svTagNdof"         ,"SV ndf",                                  20,0,20    ); 
+	histProducer.AddHisto("jet_svTagFlight"       ,"SV flight distance",                      100,0,2    ); 
+	histProducer.AddHisto("jet_svTagFlightErr"    ,"SV flight distance error",                100,0,2    ); 
+	histProducer.AddHisto("jet_svTagFlight2D"       ,"SV 2D flight distance",                 100,0,2    ); 
+	histProducer.AddHisto("jet_svTagFlight2DErr"    ,"SV 2D flight distance error",           100,0,2    ); 
 
 	histProducer.AddHisto("jet_csvBDisc", "Jet CSV b discriminator", 200, 0.,1.) ; 
 
@@ -261,12 +267,24 @@ HiggsTagValidation::HiggsTagValidation(const edm::ParameterSet& iConfig) :
 	histProducer.AddHisto("subjet_massdrop_all"  ,"mass drop of all subjets",                        40,0.,2.);
 	histProducer.AddHisto("subjet_massdropOrg_all"  ,"mass drop w.r.t original jet of all subjets",  20,0.,2.);
 
-	histProducer.AddHisto("subjet_track_multi"  ,      "number of tracks in the jets",       40,-0.5,39.5  );
-	histProducer.AddHisto("subjet_track_multi_sel"  ,  "number of selected tracks in the jets",       40,-0.5,39.5  );
-	histProducer.AddHisto("subjet_track_charge"   ,    "charge of the tracks",                      2,-2.,2.);
-	histProducer.AddHisto("subjet_track_chi2"   ,      "normalized chi2 of the tracks",               100,0.,30.    );
-	histProducer.AddHisto("subjet_track_nHit" ,        "number of hits ",               35,-0.5, 34.5 );
-	histProducer.AddHisto("subjet_track_HPix"   ,      "number of hits in the Pixel",                 10,-0.5, 9.5  );
+	histProducer.AddHisto("subjet_track_multi"  ,      "Subjet number of tracks in the jets",       40,-0.5,39.5  );
+	histProducer.AddHisto("subjet_track_multi_sel"  ,  "Subjet number of selected tracks in the jets",       40,-0.5,39.5  );
+	histProducer.AddHisto("subjet_track_charge"   ,    "Subjet charge of the tracks",                      2,-2.,2.);
+	histProducer.AddHisto("subjet_track_chi2"   ,      "Subjet normalized chi2 of the tracks",               100,0.,30.    );
+	histProducer.AddHisto("subjet_track_nHit" ,        "Subjet number of hits ",               35,-0.5, 34.5 );
+	histProducer.AddHisto("subjet_track_HPix"   ,      "Subjet number of hits in the Pixel",                 10,-0.5, 9.5  );
+
+	histProducer.AddHisto("subjet_ipTagTrack_dxy"    ,"Subjet Dxy of impactParameterTag tracks",     100,-1.,1.); 
+	histProducer.AddHisto("subjet_ipTagTrack_dz"     ,"Subjet Dz  of impactParameterTag tracks",     100,-10.,10.); 
+	histProducer.AddHisto("subjet_ipTagTrack_zIP"    ,"Subjet z IP  of impactParameterTag tracks",     100,-10.,10.); 
+
+	histProducer.AddHisto("subjet_svTagNSV"          ,"Subjet No. of SVs",                              20,0,20    ); 
+	histProducer.AddHisto("subjet_svTagChi2"         ,"Subjet SV #chi^{2}",                             20,0,20    ); 
+	histProducer.AddHisto("subjet_svTagNdof"         ,"Subjet SV ndf",                                  20,0,20    ); 
+	histProducer.AddHisto("subjet_svTagFlight"       ,"Subjet SV flight distance",                      100,0,2    ); 
+	histProducer.AddHisto("subjet_svTagFlightErr"    ,"Subjet SV flight distance error",                100,0,2    ); 
+	histProducer.AddHisto("subjet_svTagFlight2D"     ,"Subjet SV 2D flight distance",                 100,0,2    ); 
+	histProducer.AddHisto("subjet_svTagFlight2DErr"  ,"Subjet SV 2D flight distance error",           100,0,2    ); 
 
 	histProducer.AddHisto("subjet_csvBDisc", "Subjet CSV b discriminator", 200, 0.,1.) ; 
 
@@ -587,9 +605,21 @@ HiggsTagValidation::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 				else {
 					edm::LogWarning("impactParameterTagInfos") << "Not present" ; 
 				}
+				////// Loop over SVs  
 				if ( groomedJetMatch->hasTagInfo("secondaryVertex") ) { 
 					const reco::SecondaryVertexTagInfo *svTagInfo =  groomedJetMatch->tagInfoSecondaryVertex("secondaryVertex");
-					histProducer.FillHisto_floatFromMap("jet_ipTagNSV", jetflavour, bjetFromGSplit, svTagInfo->nVertices(), eventWeight) ; 
+					histProducer.FillHisto_floatFromMap("jet_svTagNSV",  jetflavour, bjetFromGSplit, svTagInfo->nVertices(), eventWeight) ; 
+					for (unsigned int ii = 0 ; ii < svTagInfo->nVertices(); ++ii) {
+						histProducer.FillHisto_floatFromMap("jet_svTagChi2", jetflavour, bjetFromGSplit, (svTagInfo->secondaryVertex(ii)).chi2(), eventWeight) ; 
+						histProducer.FillHisto_floatFromMap("jet_svTagNdof", jetflavour, bjetFromGSplit, (svTagInfo->secondaryVertex(ii)).ndof(), eventWeight) ; 
+						histProducer.FillHisto_floatFromMap("jet_svTagFlight", jetflavour, bjetFromGSplit, (svTagInfo->flightDistance(ii).value()), eventWeight) ; 
+						histProducer.FillHisto_floatFromMap("jet_svTagFlightErr", jetflavour, bjetFromGSplit, (svTagInfo->flightDistance(ii).error()), eventWeight) ; 
+						histProducer.FillHisto_floatFromMap("jet_svTagFlight", jetflavour, bjetFromGSplit, (svTagInfo->flightDistance(ii,true).value()), eventWeight) ; 
+						histProducer.FillHisto_floatFromMap("jet_svTagFlightErr", jetflavour, bjetFromGSplit, (svTagInfo->flightDistance(ii,true).error()), eventWeight) ; 
+					}
+				}
+				else {
+					edm::LogWarning("secondaryVertexTagInfos") << "Not present" ;
 				}
 
 				//// Loop over all subjets 
@@ -635,10 +665,37 @@ HiggsTagValidation::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 						histProducer.FillHisto_floatFromMap("subjet_track_HPix",  subjetflavour, bsubjetFromGSplit, ((*ittrk_subjets)->hitPattern()).numberOfValidPixelHits(), eventWeight) ;
 					}
 
-					//const edm::RefVector<reco::TrackCollection> selTrks_svTagInfos_subjets = ( (*itsubjet)->tagInfoTrackIP("secondaryVertex") )->selectedTracks() ; 
-					//int nSelTrks_subjets = selTrks_svTagInfos_subjets.size() ; 
-
-					//histProducer.FillHisto_floatFromMap("subjet_track_multi_sel",  subjetflavour, bsubjetFromGSplit, nSelTrks_subjets,  eventWeight) ;
+					////// Loop over tracks
+					if ( (*itsubjet)->hasTagInfo("impactParameter") ) { 
+						edm::LogInfo("impactParameterTagInfos") << "Found" ; 
+						const edm::RefVector<reco::TrackCollection> &selTrks_svTagInfos_subjets( ((*itsubjet)->tagInfoTrackIP("impactParameter"))->selectedTracks() ) ; 
+						int nSelectedTracks = (it->hasTagInfo("impactParameter") ? (*itsubjet)->tagInfoTrackIP("impactParameter")->selectedTracks().size() : -99.);
+						for (unsigned int itrk = 0; itrk < selTrks_svTagInfos_subjets.size(); ++itrk) {
+							double Track_dxy = selTrks_svTagInfos_subjets[itrk]->dxy(pvtx->position());
+							histProducer.FillHisto_floatFromMap("subjet_ipTagTrack_dxy", jetflavour, bjetFromGSplit, selTrks_svTagInfos_subjets[itrk]->dxy(pvtx->position()),eventWeight ) ; 
+							histProducer.FillHisto_floatFromMap("subjet_ipTagTrack_dz", jetflavour, bjetFromGSplit, selTrks_svTagInfos_subjets[itrk]->dz(pvtx->position()),eventWeight) ; 
+							histProducer.FillHisto_floatFromMap("subjet_ipTagTrack_zIP", jetflavour, bjetFromGSplit, selTrks_svTagInfos_subjets[itrk]->dz(pvtx->position()) - pvtx->z(),eventWeight) ; 
+						}
+					}
+					else {
+						edm::LogWarning("impactParameterTagInfos") << "Not present" ; 
+					}
+					////// Loop over SVs  
+					if ( (*itsubjet)->hasTagInfo("secondaryVertex") ) { 
+						const reco::SecondaryVertexTagInfo *svTagInfo_subjet =  (*itsubjet)->tagInfoSecondaryVertex("secondaryVertex");
+						histProducer.FillHisto_floatFromMap("subjet_svTagNSV",  jetflavour, bjetFromGSplit, svTagInfo_subjet->nVertices(), eventWeight) ; 
+						for (unsigned int ii = 0 ; ii < svTagInfo_subjet->nVertices(); ++ii) {
+							histProducer.FillHisto_floatFromMap("subjet_svTagChi2", jetflavour, bjetFromGSplit, (svTagInfo_subjet->secondaryVertex(ii)).chi2(), eventWeight) ; 
+							histProducer.FillHisto_floatFromMap("subjet_svTagNdof", jetflavour, bjetFromGSplit, (svTagInfo_subjet->secondaryVertex(ii)).ndof(), eventWeight) ; 
+							histProducer.FillHisto_floatFromMap("subjet_svTagFlight", jetflavour, bjetFromGSplit, (svTagInfo_subjet->flightDistance(ii).value()), eventWeight) ; 
+							histProducer.FillHisto_floatFromMap("subjet_svTagFlightErr", jetflavour, bjetFromGSplit, (svTagInfo_subjet->flightDistance(ii).error()), eventWeight) ; 
+							histProducer.FillHisto_floatFromMap("subjet_svTagFlight", jetflavour, bjetFromGSplit, (svTagInfo_subjet->flightDistance(ii,true).value()), eventWeight) ; 
+							histProducer.FillHisto_floatFromMap("subjet_svTagFlightErr", jetflavour, bjetFromGSplit, (svTagInfo_subjet->flightDistance(ii,true).error()), eventWeight) ; 
+						}
+					}
+					else {
+						edm::LogWarning("secondaryVertexTagInfos") << "Not present" ;
+					}
 
 				}
 				h1_csvBDisc->Fill(subjetBdisc,eventWeight) ; 
