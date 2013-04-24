@@ -1,0 +1,8 @@
+<use name="BprimeKit/Headers"/> 
+<use name="BprimeKit/Utils"/> 
+<use name="EGamma/EGammaAnalysisTools"/>
+<use   name="root"/> 
+<export>
+	<lib name="1"/>
+</export>
+
