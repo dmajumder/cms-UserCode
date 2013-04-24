@@ -1,0 +1,8 @@
+<use name="MultileptonBprime/OS2LSelector"/>
+<use name="root"/>
+
+<bin name="OS2LSel" file="os2lsel.cc">
+</bin>
+
+<bin name="BprimeCandSel" file="bprimecandsel.cc">
+</bin>
